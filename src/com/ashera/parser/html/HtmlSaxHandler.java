@@ -2,6 +2,7 @@ package com.ashera.parser.html;
 
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -289,7 +290,7 @@ public class HtmlSaxHandler implements ContentHandler{
 		if (widget != null) {
 			HasWidgets parent = null;
 			if (!hasWidgets.isEmpty()) {
-				parent = hasWidgets.peek();
+				parent = hasWidgets.peek().getCompositeLeaf(widget);
 			}
 			if (parent != null) {
 				widget.setParent(parent);
@@ -348,24 +349,30 @@ public class HtmlSaxHandler implements ContentHandler{
 			widget.applyThemeStyle(widget.getGroupName());
 		}
 		
-		//second style
-		String style = atts.getValue("style");
-		if (style != null) {
-			pageData.getCss(tagName, style.replaceFirst("@style/", ""), atts.getValue("id"), new CssResult() {
-					@Override
-					public void put(String key, Attribute value) {
-						WidgetAttribute attribute = widget.getAttribute(parent, localName, key);
-						
-						if (attribute != null) {
-							WidgetAttributeValue attributeValue = new WidgetAttributeValue(value.value, 
-									value.orientation, value.minWidth, value.minHeight, value.maxWidth, value.maxHeight);
+		//second style/textAppearance etc
+		Set<WidgetAttribute> attributes = WidgetFactory.getStyleAttributes(localName);
+		if (attributes != null) {
+			for (WidgetAttribute widgetAttribute : attributes) {
+				String style = atts.getValue(widgetAttribute.getAttributeName());
+				if (style != null) {
+					pageData.getCss(tagName, style.replaceFirst("@style/", ""), atts.getValue("id"), new CssResult() {
+						@Override
+						public void put(String key, Attribute value) {
+							WidgetAttribute attribute = widget.getAttribute(parent, localName, key);
 	
-							widget.updateWidgetMap(attribute, attributeValue);
+							if (attribute != null) {
+								WidgetAttributeValue attributeValue = new WidgetAttributeValue(value.value,
+										value.orientation, value.minWidth, value.minHeight, value.maxWidth,
+										value.maxHeight);
+	
+								widget.updateWidgetMap(attribute, attributeValue);
+							}
 						}
-					}
-				});
+					});
+				}
+			}
 		}
-			
+		
 		//third local attribute
 		for (int i = 0; i < atts.getLength(); i++) {			
 			String key = atts.getLocalName(i);
