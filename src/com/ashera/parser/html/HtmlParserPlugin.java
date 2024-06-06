@@ -18,6 +18,8 @@ public class HtmlParserPlugin implements IPlugin, IHtmlParser {
 			return parseWithParent((String) args[0],(boolean) args[1],(HasWidgets) args[2],(IFragment) args[3]);
 		case "parseFile":
 			return parseFile((String) args[0],(boolean) args[1],(IFragment) args[2]);
+		case "parseFragment":
+			return parseFragment((String) args[0],(boolean) args[1],(IFragment) args[2]);
 		case "parseInclude":
 			parseInclude((HasWidgets) args[0],(String) args[1],(String) args[2],(boolean) args[3],(IFragment) args[4]);
 			return null;
@@ -62,6 +64,20 @@ public class HtmlParserPlugin implements IPlugin, IHtmlParser {
 	@Override
 	public IWidget parseFile(String fileName, boolean template, IFragment fragment) {
 		String html = PluginInvoker.getFileAsset("www/" + fileName, fragment);
+		return parse(html, template, fragment);
+	}
+	
+
+	@Override
+	public IWidget parseFragment(String fileNameOrHtml, boolean template, IFragment fragment) {
+		String html = fileNameOrHtml; 
+		
+		if (fileNameOrHtml.startsWith("layout")) {
+			html = PluginInvoker.getFileAsset("www/" + fileNameOrHtml, fragment);
+		}
+		if (!html.trim().endsWith("</layout>")) {
+			html = "<layout>" + html + "</layout>";
+		}
 		return parse(html, template, fragment);
 	}
 
