@@ -92,7 +92,7 @@ public class HtmlParserPlugin implements IPlugin, IHtmlParser {
 
 	@Override
 	public IWidget handlerStart(Object handler, IWidget widget, int index) {
-		return ((HtmlSaxHandler) handler).startCreateWidget(widget.getLocalName(), null, null, widget.getId(), index, null, widget.getAttributes(), widget.getParams());
+		return ((HtmlSaxHandler) handler).startCreateWidget(widget.getLocalName(), null, null, widget.getId(), index, null, widget.getAttributes(), widget.getParams(), widget.getUnResolvedAttributes());
 
 	}
 

@@ -184,7 +184,7 @@ public class HtmlSaxHandler implements ContentHandler{
 		this.widget = WidgetFactory.get(localName, isTemplate);
 		
 		Map<String, Object> params = getParams(atts, localName);
-		startCreateWidget(localName, widget, tagName, getValue("android:id", atts), -1, atts, null, params);
+		startCreateWidget(localName, widget, tagName, getValue("android:id", atts), -1, atts, null, params, null);
 	}
 
 	private Map<String, Object> getParams(Attributes atts, String localName) {
@@ -230,7 +230,7 @@ public class HtmlSaxHandler implements ContentHandler{
     }
 
     public IWidget startCreateWidget(String localName, IWidget widget, String tagName, String id, int index,
-			Attributes atts, WidgetAttributeMap widgetAttributeMap, Map<String, Object> params) {
+			Attributes atts, WidgetAttributeMap widgetAttributeMap, Map<String, Object> params, Map<String, String> unresolvedAttributes) {
 		if (localName.equalsIgnoreCase("Inline")) {
 			String type = getValue("type", atts);
 			
@@ -309,9 +309,19 @@ public class HtmlSaxHandler implements ContentHandler{
 			widget.setComponentId(componentId);
 
 			if (widgetAttributeMap == null) {
-				populateAttributes(widget, parent, tagName, localName, atts);
+				populateAttributes(widget, parent, tagName, localName, atts, isTemplate);
 			} else {
 				this.widget.updateWidgetMap(widgetAttributeMap);
+				
+				if (unresolvedAttributes != null) {
+					for (String key : unresolvedAttributes.keySet()) {
+						final WidgetAttribute attribute = widget.getAttribute(parent, localName, key);
+						if (attribute != null) {
+							WidgetAttributeValue attributeValue = new WidgetAttributeValue(unresolvedAttributes.get(key));
+							widget.updateWidgetMap(attribute, attributeValue);
+						}
+					}
+				}
 			}
 			
 			if (parent != null) {
@@ -343,7 +353,7 @@ public class HtmlSaxHandler implements ContentHandler{
 		return attributes.getValue(key);
 	}
 	
-	private void populateAttributes(final IWidget widget, final HasWidgets parent, final String tagName, final String localName, Attributes atts) {
+	private void populateAttributes(final IWidget widget, final HasWidgets parent, final String tagName, final String localName, Attributes atts, boolean isTemplate) {
 		// first theme
 		if (!isAndroid ) {
 			widget.applyThemeStyle(widget.getGroupName());
@@ -376,12 +386,18 @@ public class HtmlSaxHandler implements ContentHandler{
 		//third local attribute
 		for (int i = 0; i < atts.getLength(); i++) {			
 			String key = atts.getLocalName(i);
-			final WidgetAttribute attribute = widget.getAttribute(parent, localName, key);
 			
-			if (attribute != null) {
-				WidgetAttributeValue attributeValue = new WidgetAttributeValue(atts.getValue(i));
-				widget.updateWidgetMap(attribute, attributeValue);
+			if (key.startsWith("layout_") && isTemplate) {
+				widget.addUnResolvedAttribute(key, atts.getValue(i));
+			} else {
+				final WidgetAttribute attribute = widget.getAttribute(parent, localName, key);
 				
+				if (attribute != null) {
+					WidgetAttributeValue attributeValue = new WidgetAttributeValue(atts.getValue(i));
+					widget.updateWidgetMap(attribute, attributeValue);
+				} else {
+					widget.addUnResolvedAttribute(key, atts.getValue(i));
+				}
 			}
 		}
 	}
