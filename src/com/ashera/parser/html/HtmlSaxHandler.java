@@ -2,7 +2,6 @@ package com.ashera.parser.html;
 
 import java.io.StringReader;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;

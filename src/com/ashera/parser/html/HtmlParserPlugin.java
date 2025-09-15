@@ -33,6 +33,8 @@ public class HtmlParserPlugin implements IPlugin, IHtmlParser {
 		case "addToCurrentParent":
 			addToCurrentParent((Object) args[0],(IWidget) args[1]);
 			return null;
+		case "xml2json":
+			return xml2json((String) args[0],(IFragment) args[1]);
 		default:
 			break;
 		}
@@ -63,7 +65,12 @@ public class HtmlParserPlugin implements IPlugin, IHtmlParser {
 
 	@Override
 	public IWidget parseFile(String fileName, boolean template, IFragment fragment) {
-		String html = PluginInvoker.getFileAsset("www/" + fileName, fragment);
+		String html; 
+		if (fragment.getRootDirectory() != null) {
+			html = PluginInvoker.readCdvDataAsString(fragment.getRootDirectory(), "www/" + fileName, fragment);
+		} else {
+			html = PluginInvoker.getFileAsset("www/" + fileName, fragment);
+		}
 		return parse(html, template, fragment);
 	}
 	
@@ -122,6 +129,13 @@ public class HtmlParserPlugin implements IPlugin, IHtmlParser {
 		}
 		
 		HtmlParser.parse(handler, html);
+	}
+
+	@Override
+	public String xml2json(String xml, IFragment fragment) {
+		Html2JsonSaxHandler handler = new Html2JsonSaxHandler();
+		HtmlParser.parse(handler, xml);
+		return handler.toJson();	
 	}
 	
 }

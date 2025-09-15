@@ -14,5 +14,5 @@ public interface IHtmlParser {
 	IWidget handlerStart(Object handler, IWidget widget, int index);
 	void handlerEnd(Object handler, IWidget widget);
 	void addToCurrentParent(Object handler, IWidget widget);
-	
+	String xml2json(String xml, IFragment fragment);
 }
